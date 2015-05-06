@@ -7,13 +7,13 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".HearingCheck"
-    android:background="@drawable/main_header_selector" >
+    android:clickable="true">
 
     <TextView
         android:id="@+id/textView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFF"
+        android:textColor="@color/ce_color"
         android:text="@string/hearing_check" />
 
     <ImageView
@@ -30,6 +30,7 @@
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/ce_color"
         android:layout_alignLeft="@+id/imageView1"
         android:layout_below="@+id/imageView1"
         android:layout_marginTop="14dp"
@@ -49,18 +50,21 @@
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@color/ce_color"
         android:layout_alignLeft="@+id/progressBar1"
         android:layout_alignParentBottom="true"
         android:layout_alignRight="@+id/progressBar1"
         android:layout_marginBottom="15dp"
         android:onClick="canHear"
         android:text="@string/can_hear"
-        android:textColor="#000" />
+        android:textColor="@android:color/white" />
 
     <Button
         android:id="@+id/button1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@color/ce_color"
+        android:textColor="@android:color/white"
         android:layout_alignRight="@+id/imageView1"
         android:text="@string/abort" />
 

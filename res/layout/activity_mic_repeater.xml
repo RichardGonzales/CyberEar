@@ -1,155 +1,182 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mrlayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/main_header_selector"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".MicRepeater" >
+    tools:context=".MicRepeater"
+    android:scrollbars="none">
 
-    <TextView
-        android:id="@+id/textView4"
+<!--    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/seekBar_vol"
-        android:layout_below="@+id/seekBar_vol"
-        android:gravity="right"
-        android:text="@string/test_volume_text"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="#5CF" />
+        android:layout_height="match_parent"
+        android:scrollbars="none">-->
 
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/textView4"
-        android:layout_below="@+id/textView4"
-        android:text="@string/vol_value"
-        android:textColor="#5CF" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
 
-    <SeekBar
-        android:id="@+id/seekBar_bal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/textView3"
-        android:layout_below="@+id/textView3"
-        android:layout_marginTop="32dp" />
+            <ImageView
+                android:id="@+id/imageView4"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="false"
+                android:layout_alignParentTop="true"
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                android:cropToPadding="false"
+                android:onClick="playButtonPressed"
+                android:src="@drawable/app_icon" />
 
-    <TextView
-        android:id="@+id/textView5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/seekBar_bal"
-        android:layout_below="@+id/seekBar_bal"
-        android:layout_marginTop="20dp"
-        android:text="@string/bal_ratio"
-        android:textColor="#5CF" />
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/seekBar_vol"
+                android:layout_below="@+id/seekBar_vol"
+                android:gravity="right"
+                android:text="@string/test_volume_text"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textColor="@color/ce_color" />
 
-    <TextView
-        android:id="@+id/textView6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView5"
-        android:layout_below="@+id/seekBar_bal"
-        android:text="@string/balance_marker"
-        android:textColor="#5CF" />
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignRight="@+id/textView4"
+                android:layout_below="@+id/textView4"
+                android:text="@string/vol_value"
+                android:textColor="@color/ce_color" />
 
-    <SeekBar
-        android:id="@+id/seekBar_vol"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp" />
+            <SeekBar
+                android:id="@+id/seekBar_bal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/imageView4"
+                android:layout_marginTop="@dimen/activity_vertical_margin" />
 
-    <Button
-        android:id="@+id/button_center"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/button5"
-        android:layout_alignRight="@+id/textView5"
-        android:layout_below="@+id/textView5"
-        android:onClick="centerAudio"
-        android:text="@string/center"
-        android:textColor="#000" />
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/seekBar_bal"
+                android:text="@string/bal_ratio"
+                android:textAppearance="@android:style/TextAppearance.Large"
+                android:textColor="@color/ce_color" />
 
-    <ProgressBar
-        android:id="@+id/vumeter"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/button1"
-        android:layout_alignLeft="@+id/button1"
-        android:layout_alignRight="@+id/textView6"
-        android:layout_marginBottom="17dp"
-        android:background="@drawable/progress_color"
-        android:max="100"
-        android:progress="0"
-        android:progressDrawable="@drawable/progress_color" />
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentRight="false"
+                android:layout_below="@+id/seekBar_bal"
+                android:gravity="left"
+                android:text="@string/balance_marker"
+                android:textAppearance="@android:style/TextAppearance.Large"
+                android:textColor="@color/ce_color" />
 
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/seekBar_bal"
-        android:layout_alignTop="@+id/textView5"
-        android:text="@string/hiss"
-        android:onClick="decrease_treble_k" />
+            <SeekBar
+                android:id="@+id/seekBar_vol"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="16dp" />
 
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignRight="@+id/button_center"
-        android:layout_marginBottom="30dp"
-        android:onClick="endActivity"
-        android:text="@string/end_activity_button"
-        android:textColor="#000" />
+            <Button
+                android:id="@+id/button_center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignRight="@+id/textView5"
+                android:layout_below="@+id/textView5"
+                android:layout_marginTop="@dimen/activity_vertical_margin"
+                android:background="@color/ce_color"
+                android:onClick="centerAudio"
+                android:text="@string/center"
+                android:textColor="@android:color/white" />
 
-    <Button
-        android:id="@+id/button1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/button2"
-        android:layout_alignBottom="@+id/button2"
-        android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/button_center"
-        android:onClick="playButtonPressed"
-        android:text="@string/button_start"
-        android:textColor="#000" />
+            <ProgressBar
+                android:id="@+id/vumeter"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/imageView4"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/progress_color"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/progress_color" />
 
-    <Button
-        android:id="@+id/button4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/button3"
-        android:layout_alignRight="@+id/button3"
-        android:layout_below="@+id/button3"
-        android:text="@string/bass"
-        android:onClick="increase_bass_k" />
+            <Button
+                android:id="@+id/button2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignRight="@+id/button_center"
+                android:layout_marginBottom="30dp"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:background="@color/ce_color"
+                android:onClick="endActivity"
+                android:text="@string/end_activity_button"
+                android:textColor="@android:color/white" />
 
-    <Button
-        android:id="@+id/button5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/button4"
-        android:layout_alignTop="@+id/button3"
-        android:layout_toRightOf="@+id/button3"
-        android:onClick="reset_k_values"
-        android:text="@string/revert" />
+            <!--
+                <Button
+                android:id="@+id/button1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/button2"
+                android:layout_alignBottom="@+id/button2"
+                android:layout_alignParentLeft="true"
+                android:layout_toLeftOf="@+id/button_center"
+                android:onClick="playButtonPressed"
+                android:text="Impulse Protection Off"
+                android:textColor="@android:color/white"
+                android:background="@color/ce_color"
 
-    <Button
-        android:id="@+id/button6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/button4"
-        android:layout_alignRight="@+id/button4"
-        android:layout_below="@+id/button4"
-        android:onClick="toggle_impulse_protection"
-        android:text="@string/imp_prot_off" />
+            -->
 
-</RelativeLayout>
+            <Button
+                android:id="@+id/button6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/seekBar_bal"
+                android:layout_below="@+id/textView6"
+                android:layout_marginTop="@dimen/activity_vertical_margin"
+                android:background="@color/ce_color"
+                android:onClick="toggle_impulse_protection"
+                android:padding="2px"
+                android:text="@string/imp_prot_off"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/vumeter"
+                android:layout_centerHorizontal="true"
+                android:text="@string/main_guidance2"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textColor="@color/ce_color" />
+
+            <TextView
+                android:id="@+id/textView8"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/textView"
+                android:layout_centerHorizontal="true"
+                android:text="@string/main_guidance"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textColor="@color/ce_color" />
+        </RelativeLayout>
+
+<!--    </ScrollView>-->
+
+</ScrollView>

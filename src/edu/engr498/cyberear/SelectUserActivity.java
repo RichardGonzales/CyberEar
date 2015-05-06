@@ -72,7 +72,7 @@ public class SelectUserActivity extends Activity
 							//startActivity(getIntent());
 						}
 						AlertDialog.Builder builder = new AlertDialog.Builder(SelectUserActivity.this);
-						builder.setMessage("Overwrite or Coninute to Hearing Aid")
+						builder.setMessage("Overwrite or Continue to Hearing Aid")
 							.setTitle("User exists")
 							.setPositiveButton("Perform New Hearing Test",
 									new DialogInterface.OnClickListener() {
@@ -174,7 +174,7 @@ public class SelectUserActivity extends Activity
 				names.addView(rb[i]);
 				rb[i].setText(data.get(i)[0]);
 				final String delete_user_name = data.get(i)[0];
-				rb[i].setTextColor(Color.WHITE);
+				rb[i].setTextColor(Color.rgb(63, 81, 181));
 				rb[i].setOnLongClickListener(new View.OnLongClickListener() {
 					
 					@Override

@@ -6,8 +6,15 @@
 
 package edu.engr498.cyberear;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import org.puredata.android.io.AudioParameters;
+import org.puredata.android.io.PdAudio;
+import org.puredata.core.PdBase;
+import org.puredata.core.utils.IoUtils;
 
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -23,6 +30,8 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.WindowManager;
@@ -31,6 +40,7 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /*************************************************************************
  * Class: MicRepeater
@@ -64,6 +74,8 @@ public class MicRepeater extends Activity
 	private float leftVolume;
 	private float rightVolume;
 	
+	private static final String TAG = "CyberEar";
+
 	private Timer timer;
 	private long period = (long) ( 250 );		// how often to update display, ie the volume bar location and numbers: 250ms
 	
@@ -85,6 +97,7 @@ public class MicRepeater extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		unpackResources();
 		setContentView(R.layout.activity_mic_repeater);
 		//keep screen on
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -100,6 +113,58 @@ public class MicRepeater extends Activity
 		 * Set up SeekBar volControl for setting the Android Media volume.
 		 * Also, give it the initial position based on this volume.
 		 ***********************************************************************************************************/
+		
+		//Balance Control
+		
+		balControl = (SeekBar) findViewById(R.id.seekBar_bal);
+
+		balControl.setMax(10);
+		balControl.setProgress(5);
+		balControl.setOnSeekBarChangeListener( new OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+			{
+				//Toast.makeText(getApplicationContext(), progress + "", Toast.LENGTH_SHORT).show();
+				if(progress > 5){
+					Object [] b = {1.5 + ((progress - 5)/10)};
+					PdBase.sendList("rbal",b);
+					
+					Object [] b1 = {1 - ((progress - 5)/10)};
+					PdBase.sendList("lbal",b1);
+					
+				}
+				else if(progress < 5){
+					Object [] b = {1.5 + ((5 - progress)/10)};
+					PdBase.sendList("lbal",b);
+					Object [] b1 = {1 - ((5 - progress)/10)};
+					PdBase.sendList("rbal",b1);
+	
+				}
+				else{
+					Object [] b = {1.5};
+					PdBase.sendList("lbal",b);
+					Object [] b1 = {1.5};
+					PdBase.sendList("rbal",b1);
+					
+				}
+				
+				
+			}
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar)
+			{
+				// do nothing
+			}
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar)
+			{
+				// do nothing
+			}
+					
+		
+		});
+		
+		////////////
 		volControl = (SeekBar) findViewById(R.id.seekBar_vol);
 		maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 		volControl.setMax(maxVol);
@@ -121,46 +186,13 @@ public class MicRepeater extends Activity
 			{
 				// do nothing
 			}
+					
+		
 		});
 		
 		/************************************************************************************************************
 		 * Set up SeekBar balControl to control balance.
 		 ************************************************************************************************************/
-		balControl = (SeekBar) findViewById(R.id.seekBar_bal);
-		balControl.setMax(1000);
-		balControl.setProgress(500);
-		
-		leftVolume = balControl.getProgress();
-		rightVolume = 1000 - leftVolume;
-
-		balRatio = (TextView) findViewById(R.id.textView5);
-		balRatio.setText(rightVolume + ":" + leftVolume);
-		balControl.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress,boolean fromUser)
-			{
-				// TODO Auto-generated method stub
-				leftVolume = progress; //balControl.getProgress();
-				rightVolume = 1000 - leftVolume;
-				
-				balRatio.setText(rightVolume + ":" + leftVolume);
-				if(!finished)
-				{
-					setLeftRightVolume(leftVolume/1000, rightVolume/1000);
-				}
-			}
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar)
-			{
-				// TODO Auto-generated method stub
-			}
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-		});
 		
 		/*************************************************************************************************************
 		 * Set up text field for displaying --RMS average-- decibels of signal before going to AudioTrack
@@ -207,54 +239,27 @@ public class MicRepeater extends Activity
 		}, 0, period);
 		
 		calculate_k_values();
+		
+		
+		/************************************************************
+		 * Sets up Pure Data sound engine
+		 * 
+		 *************************************************************/
+		
+		try {
+			
+			initPd();
+			
+			loadPatch();
+			
+			
+		} catch (IOException e) {
+			Log.e(TAG, e.toString());
+			finish();
+		}
 	}
 	
-	@Override
-	protected void onResume()
-	{
-		super.onResume();
-		
-		int recordLength = 0;
-		int trackLength = 0;
-		
-		if((minSize = AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)) > recordLength)
-			recordLength = minSize;
-		
-		if((minSize = AudioTrack.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_OUT_STEREO,AudioFormat.ENCODING_PCM_16BIT)) > trackLength)
-			trackLength = minSize;
-		
-		if(Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1)
-		{
-			audioRecord = new AudioRecord(MediaRecorder.AudioSource.CAMCORDER, sampleRate, AudioFormat.CHANNEL_IN_MONO,
-										  AudioFormat.ENCODING_PCM_16BIT, recordLength*2);
-		}
-		else if(Build.VERSION.SDK_INT >= 7)
-		{
-			audioRecord = new AudioRecord(MediaRecorder.AudioSource.CAMCORDER, sampleRate, AudioFormat.CHANNEL_IN_MONO,
-										  AudioFormat.ENCODING_PCM_16BIT, recordLength);
-		}
-		else
-		{
-			audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, AudioFormat.CHANNEL_IN_MONO,
-					  AudioFormat.ENCODING_PCM_16BIT, recordLength);
-		}
-		
-		if(Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1)
-			audioTrack = new AudioTrack( AudioManager.STREAM_MUSIC, sampleRate, AudioFormat.CHANNEL_OUT_STEREO,
-				 					 AudioFormat.ENCODING_PCM_16BIT, trackLength*2, AudioTrack.MODE_STREAM);
-		else
-			audioTrack = new AudioTrack( AudioManager.STREAM_MUSIC, sampleRate, AudioFormat.CHANNEL_OUT_STEREO,
-					 AudioFormat.ENCODING_PCM_16BIT, trackLength, AudioTrack.MODE_STREAM);
-		
-		if(Build.VERSION.SDK_INT >= 16)
-			addAcousticEchoCanceler();
-		
-		if(Build.VERSION.SDK_INT >= 16)
-			addNoiseSuppressor();
-		
-		if(Build.VERSION.SDK_INT >= 16)
-			addAutoGainControl();
-	}
+	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
@@ -264,41 +269,7 @@ public class MicRepeater extends Activity
 		return true;
 	}
 	
-	@Override
-	protected void onPause()
-	{
-		super.onPause();
-		
-		if(playing)
-		{
-			playing = false;
-			finished = true;
-		}
-		countdown = 4;
-		
-		audioRecord.release();
-	}
 	
-	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-	public void addNoiseSuppressor()
-	{
-		if(NoiseSuppressor.isAvailable())
-			NoiseSuppressor.create(audioRecord.getAudioSessionId());
-	}
-	
-	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-	public void addAcousticEchoCanceler()
-	{
-		if(AcousticEchoCanceler.isAvailable())
-			AcousticEchoCanceler.create(audioRecord.getAudioSessionId());
-	}
-	
-	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-	public void addAutoGainControl()
-	{
-		if(AutomaticGainControl.isAvailable())
-			AutomaticGainControl.create(audioRecord.getAudioSessionId());
-	}
 	
 	public void playTone()
 	{
@@ -389,6 +360,8 @@ public class MicRepeater extends Activity
 			    	  
 			    	  audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0);
 			    	  EQL.adjust_EQ(k_values[0], k_values[1], k_values[2], k_values[ 3], k_values[ 4], 0.1, 0.01);
+			    	  
+			    	  
 			    	  EQR.adjust_EQ(k_values[7], k_values[8], k_values[9], k_values[10], k_values[11], 0.1, 0.01);
 			    	  
 			    	  //eqSamplesLeft = safeEarsEQ.equalize(eqSamplesLeft);
@@ -426,7 +399,7 @@ public class MicRepeater extends Activity
 		    	  }
 		      }
 		      
-		      checkVol();
+		     // checkVol();
 		      audioTrack.write(samplesStereo, 0, 2*samplesRead);
 		}
 		audioTrack.pause();
@@ -436,57 +409,70 @@ public class MicRepeater extends Activity
 	
 	public void playButtonPressed(View view)
 	{
-		Button b = (Button) findViewById(R.id.button1);
 		
-		if(!playing)
-		{
-			b.setText("Stop Playback");
-			playing = true;
-			Thread audioT = new Thread(new Runnable() {
-	            public void run()
-	            {
-	            	android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO /*-19*/ );	//slower (or not :( )
-	                playTone();
-	            }
-			});
-			audioT.setPriority(Thread.MAX_PRIORITY);	//just do both, because empirically, it's working!
-			while(audioT.getPriority() != Thread.MAX_PRIORITY)
-			{
-				audioT.setPriority(Thread.MAX_PRIORITY);
-			}
-			audioT.start();
-			
-			if(Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1)
-				if(countdown > 0)
-				{
-					--countdown;
-					try{
-					Thread.sleep(750);
-					} catch (InterruptedException e) { }
-					playButtonPressed((View)findViewById(R.id.mrlayout));
-				}
+		if(!playing){
+		super.onResume();
+		PdAudio.startAudio(this);
+		playing = true;
 		}
-		else
-		{
-			playing = false;
-			finished = true;
-			b.setText("Start Playback");
-			
-			if(Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1)
-				if(countdown > 0)
-				{
-					--countdown;
-					try{
-					Thread.sleep(1000);
-					} catch (InterruptedException e) { }
-					playButtonPressed((View)findViewById(R.id.mrlayout));
-					return;														//very important for recursion to work properly!!!
-				}
-			
-			if(Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1)
-				if(countdown == 0)
-					countdown = 4;
+		else{
+		super.onPause();
+		PdAudio.stopAudio();
+		playing = false;
 		}
+		
+		//Button b = (Button) findViewById(R.id.button1);
+		
+//		if(!playing)
+//		{
+//			//b.setText("Stop Playback");
+//			playing = true;
+//			Thread audioT = new Thread(new Runnable() {
+//	            public void run()
+//	            {
+//	            	android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO /*-19*/ );	//slower (or not :( )
+//	                playTone();
+//	            }
+//			});
+//			audioT.setPriority(Thread.MAX_PRIORITY);	//just do both, because empirically, it's working!
+//			while(audioT.getPriority() != Thread.MAX_PRIORITY)
+//			{
+//				audioT.setPriority(Thread.MAX_PRIORITY);
+//			}
+//			audioT.start();
+//			
+//			if(Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1)
+//				if(countdown > 0)
+//				{
+//					--countdown;
+//					try{
+//					Thread.sleep(750);
+//					} catch (InterruptedException e) { }
+//					playButtonPressed((View)findViewById(R.id.mrlayout));
+//				}
+//		}
+//		else
+//		{
+//			playing = false;
+//			finished = true;
+//			//b.setText("Start Playback");
+//			
+//			if(Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1)
+//				if(countdown > 0)
+//				{
+//					--countdown;
+//					try{
+//					Thread.sleep(1000);
+//					} catch (InterruptedException e) { }
+//					playButtonPressed((View)findViewById(R.id.mrlayout));
+//					return;														//very important for recursion to work properly!!!
+//				}
+//			
+//			if(Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1)
+//				if(countdown == 0)
+//					countdown = 4;
+//		}
+		
 	}
 	
 	public void endActivity(View view)
@@ -495,17 +481,7 @@ public class MicRepeater extends Activity
 	}
 	
 	
-	public void centerAudio(View view)
-	{
-		balControl.setProgress(500);
-		leftVolume = balControl.getProgress();
-		rightVolume = 1000 - leftVolume;
-		balRatio.setText(rightVolume+":"+leftVolume);
-		if(!finished)
-		{
-			setLeftRightVolume(leftVolume/1000, rightVolume/1000);
-		}
-	}
+
 	
 	/***********************************************
 	 * Callback for decreasing hiss button
@@ -574,10 +550,22 @@ public class MicRepeater extends Activity
 		if(impulse_protection)
 		{
 			impulse_protection = false;
+			Object [] b1 = {100};
+			PdBase.sendList("ampmin",b);
+			b1[0] = -100;
+			PdBase.sendList("ampmax",b);
+
+
 			b.setText("Impulse Protection On");
 		}
 		else
 		{
+			
+			Object [] b1 = {.16};
+			PdBase.sendList("ampmin",b);
+			b1[0] = -.16;
+			PdBase.sendList("ampmax",b);
+			
 			impulse_protection = true;
 			b.setText("Impulse Protection Off");
 		}
@@ -660,6 +648,9 @@ public class MicRepeater extends Activity
 		}
 	}
 	
+	
+	
+	
 	/***********************************************************************************************************************
 	 * A silly Automatic Gain Control
 	 ***********************************************************************************************************************
@@ -670,7 +661,7 @@ public class MicRepeater extends Activity
 	 * 
 	 * Naw, just do it here.
 	 ************************************************************************************************************************/
-	public void checkVol()
+	/*	public void checkVol()
 	{
 		duration += ((double)bufferSize)/44100.0;
 		
@@ -739,5 +730,114 @@ public class MicRepeater extends Activity
 			setLeftRightVolume(leftVolume/1000, rightVolume/1000);
 		}
 	}
+	
+	*/
+	private void initPd() throws IOException {
+		AudioParameters.init(this);
+
+		// Configure the audio glue
+		int sampleRate =AudioParameters.suggestSampleRate();
+		int inpch = AudioParameters.suggestInputChannels();
+		PdAudio.initAudio(sampleRate, inpch, 2, 2, true);
+		// Create and install the dispatcher dispatcher = new PdUiDispatcher();
+		// PdBase.setReceiver(dispatcher);
+	}
+
+	private void loadPatch() throws IOException {
+		File dir = getFilesDir();
+		IoUtils.extractZipResource(getResources().openRawResource(R.raw.patch),
+				dir, true);
+		File patchFile = new File(dir, "microphone.pd");
+		PdBase.openPatch(patchFile.getAbsolutePath());
+		PdAudio.startAudio(this);
+		
+		//******************************************************************************************
+		//This is where the values found in the hearing test are used to adjust the values of the 
+		//
+		//
+		//******************************************************************************************
+		
+		calculate_k_values();
+		
+		//
+		// Left Channel
+		
+		Object [] b = {0.856, -0.3042,k_values[0]* 0.54,k_values[0]* -1.0801,k_values[0]* 0.54};
+		PdBase.sendList("lb1",b);
+    
+    	b = new Object [] {1.3477, -0.6433, k_values[1]*0.1783, 0, k_values[1]*-0.1783};
+    	PdBase.sendList("lb2",b);
+    	
+    	b = new Object [] {1.7241, -0.8063, k_values[2]*0.0969, 0,k_values[2]* -0.0969};
+    	PdBase.sendList("lb3",b);
+    	
+    	b = new Object [] {1.8768, -0.8985, k_values[3]*0.0508, 0, k_values[3]*-0.0508};
+    	PdBase.sendList("lb4",b);
+    	
+    	b = new Object [] {1.9424, -0.9479, k_values[4]*0.026, 0,k_values[4]*-0.026};
+    	PdBase.sendList("lb5",b);
+
+    	b = new Object [] {1.9722, -0.9736, k_values[5]*0.0132, 0, k_values[5]*-0.0132};
+    	PdBase.sendList("lb6",b);
+    	
+    	b = new Object [] {1.9622, -0.9629, k_values[6]*0.000175, 0.00035, k_values[6]*0.000175};
+    	PdBase.sendList("lb7",b);
+    	//
+    	// Right Channel
+    	//
+		b = new  Object []{0.856, -0.3042,k_values[7]* 0.54,k_values[7]* -1.0801,k_values[7]* 0.54};
+		PdBase.sendList("rb1",b);
+    
+		b = new Object [] {1.3477, -0.6433, k_values[8]*0.1783, 0, k_values[8]*-0.1783};
+    	PdBase.sendList("rb2",b);
+    	
+    	b = new Object [] {1.7241, -0.8063, k_values[9]*0.0969, 0,k_values[9]* -0.0969};
+    	PdBase.sendList("rb3",b);
+    	
+    	b = new Object [] {1.8768, -0.8985, k_values[10]*0.0508, 0, k_values[10]*-0.0508};
+    	PdBase.sendList("rb4",b);
+    	
+    	b = new Object [] {1.9424, -0.9479, k_values[11]*0.026, 0,k_values[11]*-0.026};
+    	PdBase.sendList("rb5",b);
+
+    	b = new Object [] {1.9722, -0.9736, k_values[12]*0.0132, 0, k_values[12]*-0.0132};
+    	PdBase.sendList("rb6",b);
+    	
+    	b = new Object [] {1.9622, -0.9629, k_values[13]*0.000175, 0.00035, k_values[13]*0.000175};
+    	PdBase.sendList("rb7",b);
+		
+		onPause();
+
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		PdAudio.startAudio(this);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		PdAudio.stopAudio();
+	}
+
+
+
+	private void unpackResources() {
+		Resources res = getResources();
+		File libDir = getFilesDir();
+		try {
+			IoUtils.extractZipResource(res.openRawResource(R.raw.fftease), libDir, true);
+		} catch (IOException e) {
+			Log.e("CyberEar", e.toString());
+		}
+		PdBase.addToSearchPath(libDir.getAbsolutePath());
+	}
+	
+
+	
+	
+
 
 }

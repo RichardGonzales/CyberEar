@@ -29,11 +29,11 @@ public class Instruction extends Activity {
 		
 		//set title 1
 
-		title1.setText("1. New User");
+		title1.setText("1. New User or New Headphones");
 
 		//set con1
 
-		con1.setText("\t\tIf you are a new user, please enter your name.\t" +
+		con1.setText("\t\tIf you are a new user or are using a different set of headphones, please enter your name.\t" +
 
 		"Then you should complete the Hearing Check.\n\n" +
 
@@ -49,11 +49,13 @@ public class Instruction extends Activity {
 
 		con2.setText("\t\tWhen you complete the Hearing Check, you can start the hearing aid.\n\n" +
 
-		"Press the 'Start Playback' button to start.\n\n" +
+		"Tap on the App Logo to start.\n\n" +
 
-		"You can adjust the volume with the 'Volume Bar'.\n\n" +
+		"You can adjust the volume with the 'Volume Bar' at the top or the volume buttons on your phone.\n\n" +
 
-		"Also, you can adjust left volume and right volume separately by using the " +
+        "If you scroll down from the main view, you can access additional settings.\n\n" +
+
+		"You can adjust left volume and right volume separately by using the " +
 
 		"'Balance Bar'.\n\n" +
 		
